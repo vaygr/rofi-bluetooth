@@ -33,13 +33,13 @@ power_on() {
 toggle_power() {
     if power_on; then
         bluetoothctl power off
-        show_menu
+        [ x"$1" == x"quiet" ] || show_menu
     else
         if rfkill list bluetooth | grep -q 'blocked: yes'; then
             rfkill unblock bluetooth && sleep 3
         fi
         bluetoothctl power on
-        show_menu
+        [ x"$1" == x"quiet" ] || show_menu
     fi
 }
 
@@ -183,7 +183,7 @@ toggle_trust() {
 # Useful for status bars like polybar, etc.
 print_status() {
     if power_on; then
-        printf ''
+        status=""
 
         mapfile -t paired_devices < <(bluetoothctl paired-devices | grep Device | cut -d ' ' -f 2)
         counter=0
@@ -192,19 +192,22 @@ print_status() {
             if device_connected $device; then
                 device_alias=$(bluetoothctl info $device | grep "Alias" | cut -d ' ' -f 2-)
 
-                if [ $counter -gt 0 ]; then
-                    printf ", %s" "$device_alias"
-                else
-                    printf " %s" "$device_alias"
-                fi
+                [ $counter -gt 0 ] && status+=","
+                
+                status+=" ${device_alias}"
 
                 ((counter++))
             fi
         done
         printf "\n"
+
+        # colorize status
+        [ $counter -gt 0 ] && status="%{F#397ff7}${status}%{F-}"
     else
-        echo ""
+        status="%{F#555}%{F-}"
     fi
+
+    echo "${status}"
 }
 
 # A submenu for a specific device that allows connecting, pairing, and trusting
@@ -304,6 +307,9 @@ rofi_command="rofi -dmenu -no-fixed-num-lines -yoffset -100 -i -p"
 case "$1" in
     --status)
         print_status
+        ;;
+    --toggle)
+        toggle_power quiet
         ;;
     *)
         show_menu

@@ -199,7 +199,6 @@ print_status() {
                 ((counter++))
             fi
         done
-        printf "\n"
 
         # colorize status
         [ $counter -gt 0 ] && status="%{F#397ff7}${status}%{F-}"

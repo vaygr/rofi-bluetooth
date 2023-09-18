@@ -199,7 +199,7 @@ print_status() {
                 device_alias=$(bluetoothctl info "$device" | grep "Alias" | cut -d ' ' -f 2-)
 
                 [ $counter -gt 0 ] && status+=","
-                
+
                 status+=" ${device_alias}"
 
                 ((counter++))
